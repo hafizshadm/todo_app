@@ -16,6 +16,21 @@ class Todo(db.Model):
     def __repr__(self):
         return f'<Todo {self.id} {self.description}>'
 
+@app.route('/todos/<todo_id>/delete-todo', methods=['DELETE'])
+def delete_todo(todo_id):
+    body = {}
+    try:
+        todo = Todo.query.get(todo_id)
+        db.session.delete(todo)
+        db.session.commit()
+    except:
+        db.session.rollback()
+    finally:
+        db.session.close()
+        return jsonify({
+            'deletedId': todo_id
+        })
+
 
 @app.route('/todos/<todo_id>/set-completed', methods=['POST'])
 def update_todo(todo_id):

@@ -15,6 +15,24 @@
             list-style: none;
             padding: 0;
             margin: 0;
+            width: 200px;
+        }
+
+        li {
+            clear: both;
+            padding: 5px;
+            margin: 3px;
+            border: 1px solid #a7a7a7;
+        }
+
+        li button {
+            -webkit-appearance: none;
+            border: none;
+            outline: none;
+            color: red;
+            cursor: pointer;
+            float: right;
+            background: transparent;
         }
     </style>
 </head>
@@ -31,20 +49,44 @@
             <input class="check-completed" data-id="{{ d.id }}" type="checkbox" {% if d.completed %} checked {% endif
                 %} />
             {{d.description}}
+            <button class="btn-delete-todo" data-id="{{ d.id }}">&cross;</button>
         </li>
         {% endfor %}
     </ul>
 
     <script>
         // console.log('Hello World');
+
+        const deleteTodoBtns = document.querySelectorAll('.btn-delete-todo');
+        for (let i = 0; i < deleteTodoBtns.length; i++) {
+            const btnDelete = deleteTodoBtns[i];
+            btnDelete.onclick = (e) => {
+                // console.log('evt', e.originalTarget.attributes["data-id"]["value"]);
+                const todoId = e.originalTarget.attributes["data-id"]["value"];
+                fetch('/todos/' + todoId + '/delete-todo', {
+                    method: 'DELETE'
+                })
+                    .then((resp) => {
+                        return resp.json();
+                    })
+                    .then((respJson) => {
+                        if (todoId == respJson["deletedId"]) {
+                            btnDelete.parentNode.parentNode.removeChild(btnDelete.parentNode);
+                        }
+                    })
+            }
+        }
+
+
+
         const checkboxes = document.querySelectorAll('.check-completed');
         for (let i = 0; i < checkboxes.length; i++) {
             const checkbox = checkboxes[i]
             checkbox.onchange = (e) => {
-                console.log('evt', e);
+
                 const newCompleted = e.target.checked;
                 const todoId = e.target.dataset['id'];
-                console.log(newCompleted, todoId);
+                // console.log(newCompleted, todoId);
                 fetch('/todos/' + todoId + '/set-completed', {
                     method: 'POST',
                     body: JSON.stringify({
@@ -63,7 +105,7 @@
             e.preventDefault();
             todoDesc = document.getElementById('description').value;
             // console.log(todoDesc);
-
+            document.getElementById('description').value = '';
             fetch('/todos/create', {
                 method: 'POST',
                 body: JSON.stringify(
@@ -79,12 +121,12 @@
                 .then((jsonRes) => {
                     // console.log(jsonRes);
                     const listItem = document.createElement('LI');
-                    listItem.innerHTML = jsonRes['description'];
+                    listItem.innerHTML = jsonRes['description']; 
                     document.getElementById('todo').appendChild(listItem);
                     document.getElementById('error').classname = 'hidden';
                 })
                 .catch(() => {
-                    document.getElementById('error').className='';
+                    document.getElementById('error').className = '';
                 })
         }
     </script>
