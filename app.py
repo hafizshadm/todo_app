@@ -9,15 +9,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:root@localhost:54
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+
 class Todo(db.Model):
     __tablename__ = 'todos'
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(), nullable=False)
     completed = db.Column(db.Boolean, nullable=False, default=False)
-    list_id = db.Column(db.Integer, db.ForeignKey('todo_lists.id'), nullable=False)
+    list_id = db.Column(db.Integer, db.ForeignKey(
+        'todo_lists.id'), nullable=False)
 
     def __repr__(self):
         return f'<Todo {self.id} {self.description}>'
+
 
 class TodoList(db.Model):
     __tablename__ = 'todo_lists'
@@ -27,6 +30,7 @@ class TodoList(db.Model):
 
     def __repr__(self):
         return f'<TodoList {self.id} {self.name}>'
+
 
 @app.route('/todos/<todo_id>/delete-todo', methods=['DELETE'])
 def delete_todo(todo_id):
@@ -57,6 +61,7 @@ def update_todo(todo_id):
         db.session.close()
         return redirect(url_for('index'))
 
+
 @app.route('/todos/create', methods=['POST'])
 def create_todo():
     error = False
@@ -82,14 +87,21 @@ def create_todo():
         return jsonify(body)
         # return render_template('index.html', data=Todo.query.order_by('id').all())
 
+
 @app.route('/lists/<list_id>')
 def get_list_todos(list_id):
     db.create_all()
-    return render_template('index.html', data=Todo.query.filter_by(list_id = list_id).order_by('id').all())
+    return render_template(
+        'index.html',
+        lists=TodoList.query.all(),
+        active_list=TodoList.query.get(list_id),
+        todos=Todo.query.filter_by(list_id=list_id).order_by('id').all()
+    )
+
 
 @app.route('/')
 def index():
-    return redirect(url_for('get_list_todos', list_id = 1))
+    return redirect(url_for('get_list_todos', list_id=1))
 
 
 if __name__ == '__main__':
