@@ -69,12 +69,21 @@ def create_todo():
     try:
         # description = request.form.get('description', '')
         description = request.get_json()['description']
+        list_id = request.get_json()['list_id']
         todo = Todo(description=description)
+        active_list = TodoList.query.get(list_id)
+        todo.list = active_list
         db.session.add(todo)
+        db.session.flush()
+        newId = todo.id
+        body['id'] = newId
+        body['description'] = todo.description
         db.session.commit()
         # return redirect(url_for('index'))
         # return render_template('index.html', data=Todo.query.all())
-        body['description'] = todo.description
+        # body['id'] = todo.inserted_primary_key[0]
+        # print(todo.inserted_primary_key)
+        
     except:
         error = True
         db.session.rollback()
